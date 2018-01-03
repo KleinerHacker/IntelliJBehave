@@ -86,6 +86,20 @@ public class StepDefinitionAnnotationConverter {
     }
 
     private static String getTextFromValue(PsiElement value) {
-        return remove(removeStart(removeEnd(value.getText(), "\""), "\""), "\\");
+        PsiElement[] children = value.getChildren();
+        if (children.length == 1) {
+            return remove(removeStart(removeEnd(value.getText(), "\""), "\""), "\\");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (PsiElement element : children) {
+                if (element instanceof PsiLiteralExpression) {
+                    sb.append(remove(removeStart(removeEnd(element.getText(), "\""), "\""), "\\"));
+                }
+                if (element instanceof PsiReferenceExpression) {
+                    sb.append(getTextFromValue(((PsiReferenceExpression) element).resolve()));
+                }
+            }
+            return sb.toString();
+        }
     }
 }
